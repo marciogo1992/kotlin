@@ -81,7 +81,7 @@ internal class GradleKotlinCompilerWork @Inject constructor(
     private val taskPath = config.taskPath
 
     private val log: KotlinLogger =
-        TaskLoggers.get(taskPath)?.let { GradleKotlinLogger(it) }
+        TaskLoggers.get(taskPath)?.let { GradleKotlinLogger(it).apply { debug("Using '$taskPath' logger") } }
             ?: run {
                 System.err.println("Could not get logger for '$taskPath'. Falling back to sl4j logger")
                 SL4JKotlinLogger(LoggerFactory.getLogger("GradleKotlinCompilerWork"))
