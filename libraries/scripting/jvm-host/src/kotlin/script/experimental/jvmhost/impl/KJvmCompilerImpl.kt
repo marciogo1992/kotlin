@@ -42,9 +42,9 @@ import org.jetbrains.kotlin.script.KotlinScriptDefinition
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import java.util.*
 import kotlin.reflect.KClass
+import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KType
 import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.starProjectedType
 import kotlin.script.dependencies.ScriptContents
 import kotlin.script.experimental.api.*
@@ -383,23 +383,24 @@ class KJvmCompilerImpl(val hostConfiguration: ScriptingHostConfiguration) : KJvm
             reportIgnoredArguments(
                 arguments,
                 "The following compiler arguments are ignored on script compilation: ",
-                messageCollector, reportingState,
-                "version",
-                "destination",
-                "buildFile",
-                "commonSources",
-                "allWarningsAsErrors",
-                "script",
-                "scriptTemplates",
-                "scriptResolverEnvironment",
-                "disableStandardScript",
-                "disableDefaultScriptingPlugin",
-                "pluginClasspaths",
-                "pluginOptions",
-                "useJavac",
-                "compileJava",
-                "reportPerf",
-                "dumpPerf"
+                messageCollector, 
+                reportingState,
+                K2JVMCompilerArguments::version,
+                K2JVMCompilerArguments::destination,
+                K2JVMCompilerArguments::buildFile,
+                K2JVMCompilerArguments::commonSources,
+                K2JVMCompilerArguments::allWarningsAsErrors,
+                K2JVMCompilerArguments::script,
+                K2JVMCompilerArguments::scriptTemplates,
+                K2JVMCompilerArguments::scriptResolverEnvironment,
+                K2JVMCompilerArguments::disableStandardScript,
+                K2JVMCompilerArguments::disableDefaultScriptingPlugin,
+                K2JVMCompilerArguments::pluginClasspaths,
+                K2JVMCompilerArguments::pluginOptions,
+                K2JVMCompilerArguments::useJavac,
+                K2JVMCompilerArguments::compileJava,
+                K2JVMCompilerArguments::reportPerf,
+                K2JVMCompilerArguments::dumpPerf
             )
         }
 
@@ -409,40 +410,35 @@ class KJvmCompilerImpl(val hostConfiguration: ScriptingHostConfiguration) : KJvm
             reportIgnoredArguments(
                 arguments,
                 "The following compiler arguments are ignored when configured from refinement callbacks: ",
-                messageCollector, reportingState,
-                "noJdk",
-                "jdkHome",
-                "javaModulePath",
-                "classpath",
-                "noStdlib",
-                "noReflect"
+                messageCollector, 
+                reportingState,
+                K2JVMCompilerArguments::noJdk,
+                K2JVMCompilerArguments::jdkHome,
+                K2JVMCompilerArguments::javaModulePath,
+                K2JVMCompilerArguments::classpath,
+                K2JVMCompilerArguments::noStdlib,
+                K2JVMCompilerArguments::noReflect
             )
         }
 
         private fun reportIgnoredArguments(
             arguments: K2JVMCompilerArguments, message: String,
             messageCollector: MessageCollector, reportingState: ReportingState,
-            vararg toIgnore: String
+            vararg toIgnore: KMutableProperty1<K2JVMCompilerArguments, *>
         ) {
-            val ignored = arguments.filterNewByList(reportingState.currentArguments, *toIgnore)
+            val ignoredArgKeys = toIgnore.mapNotNull { argProperty ->
+                if (argProperty.get(arguments) != argProperty.get(reportingState.currentArguments)) {
+                    argProperty.findAnnotation<Argument>()?.value
+                        ?: throw IllegalStateException("unknown compiler argument property: $argProperty: no Argument annotation found")
+                } else null
+            }
 
-            if (ignored.isNotEmpty()) {
-                messageCollector.report(CompilerMessageSeverity.STRONG_WARNING, "$message${ignored.joinToString(", ")}")
+            if (ignoredArgKeys.isNotEmpty()) {
+                messageCollector.report(CompilerMessageSeverity.STRONG_WARNING, "$message${ignoredArgKeys.joinToString(", ")}")
             }
         }
     }
 }
-
-private fun K2JVMCompilerArguments.filterNewByList(current: K2JVMCompilerArguments, vararg accepted: String): List<String> =
-    accepted.mapNotNull { argFieldName ->
-        val argProperty = K2JVMCompilerArguments::class.memberProperties
-            .find { it.name == argFieldName }
-            ?: throw Exception("unknown compiler argument property: $argFieldName: not found")
-        if (argProperty.get(this) != argProperty.get(current)) {
-            argProperty.findAnnotation<Argument>()?.value
-                ?: throw Exception("unknown compiler argument property: $argFieldName: no Argument annotation found")
-        } else null
-    }
 
 internal class ScriptDiagnosticsMessageCollector : MessageCollector {
 
