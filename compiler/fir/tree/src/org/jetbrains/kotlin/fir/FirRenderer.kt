@@ -707,16 +707,18 @@ class FirRenderer(builder: StringBuilder) : FirVisitorVoid() {
         print(">")
     }
 
-    override fun visitMemberAccess(memberAccess: FirMemberAccess) {
-        val explicitReceiver = memberAccess.explicitReceiver
+    override fun visitAccess(access: FirAccess) {
+        access.annotations.renderAnnotations()
+        val explicitReceiver = access.explicitReceiver
         if (explicitReceiver != null) {
             explicitReceiver.accept(this)
-            if (memberAccess.safe) {
+            if (access.safe) {
                 print("?.")
             } else {
                 print(".")
             }
         }
+        access.calleeReference.accept(this)
     }
 
     override fun visitCallableReferenceAccess(callableReferenceAccess: FirCallableReferenceAccess) {
@@ -726,12 +728,6 @@ class FirRenderer(builder: StringBuilder) : FirVisitorVoid() {
         callableReferenceAccess.calleeReference.accept(this)
     }
 
-    override fun visitPropertyGet(propertyGet: FirPropertyGet) {
-        propertyGet.annotations.renderAnnotations()
-        visitMemberAccess(propertyGet)
-        propertyGet.calleeReference.accept(this)
-    }
-
     override fun visitSet(set: FirSet) {
         print(set.operation.operator)
         print(" ")
@@ -739,17 +735,13 @@ class FirRenderer(builder: StringBuilder) : FirVisitorVoid() {
     }
 
     override fun visitPropertySet(propertySet: FirPropertySet) {
-        propertySet.annotations.renderAnnotations()
-        visitMemberAccess(propertySet)
-        propertySet.calleeReference.accept(this)
+        visitAccess(propertySet)
         print(" ")
         visitSet(propertySet)
     }
 
     override fun visitArraySetCall(arraySetCall: FirArraySetCall) {
-        arraySetCall.annotations.renderAnnotations()
-        visitMemberAccess(arraySetCall)
-        arraySetCall.calleeReference.accept(this)
+        visitAccess(arraySetCall)
         print("[")
         arraySetCall.arguments.renderSeparated()
         print("] ")
@@ -757,9 +749,7 @@ class FirRenderer(builder: StringBuilder) : FirVisitorVoid() {
     }
 
     override fun visitFunctionCall(functionCall: FirFunctionCall) {
-        functionCall.annotations.renderAnnotations()
-        visitMemberAccess(functionCall)
-        functionCall.calleeReference.accept(this)
+        visitAccess(functionCall)
         visitCall(functionCall)
     }
 

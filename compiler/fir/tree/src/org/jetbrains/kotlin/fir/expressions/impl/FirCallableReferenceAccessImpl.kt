@@ -12,4 +12,4 @@ import org.jetbrains.kotlin.fir.expressions.FirCallableReferenceAccess
 class FirCallableReferenceAccessImpl(
     session: FirSession,
     psi: PsiElement?
-) : FirAbstractMemberAccess(session, psi), FirCallableReferenceAccess
+) : FirAbstractAccess(session, psi), FirCallableReferenceAccess

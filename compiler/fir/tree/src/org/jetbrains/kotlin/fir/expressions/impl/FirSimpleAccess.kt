@@ -7,10 +7,9 @@ package org.jetbrains.kotlin.fir.expressions.impl
 
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.fir.FirSession
-import org.jetbrains.kotlin.fir.expressions.FirPropertyGet
 
-class FirPropertyGetImpl(
+class FirSimpleAccess(
     session: FirSession,
     psi: PsiElement?,
     safe: Boolean = false
-) : FirAbstractMemberAccess(session, psi, safe), FirPropertyGet
+) : FirAbstractAccess(session, psi, safe)

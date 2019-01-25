@@ -11,7 +11,7 @@ import org.jetbrains.kotlin.fir.FirRenderer
 import org.jetbrains.kotlin.fir.declarations.FirFile
 import org.jetbrains.kotlin.fir.expressions.FirErrorExpression
 import org.jetbrains.kotlin.fir.expressions.FirExpression
-import org.jetbrains.kotlin.fir.expressions.FirMemberAccess
+import org.jetbrains.kotlin.fir.expressions.FirAccess
 import org.jetbrains.kotlin.fir.expressions.impl.FirExpressionStub
 import org.jetbrains.kotlin.fir.references.FirErrorNamedReference
 import org.jetbrains.kotlin.fir.render
@@ -59,15 +59,15 @@ class RawFirBuilderTotalKotlinTestCase : AbstractRawFirBuilderTestCase() {
                         errorExpression.psi?.let { println(it) }
                     }
 
-                    override fun visitMemberAccess(memberAccess: FirMemberAccess) {
-                        val calleeReference = memberAccess.calleeReference
+                    override fun visitAccess(access: FirAccess) {
+                        val calleeReference = access.calleeReference
                         if (calleeReference is FirErrorNamedReference) {
                             errorReferences++
                             println(calleeReference.errorReason)
                         } else {
                             normalReferences++
                         }
-                        super.visitMemberAccess(memberAccess)
+                        super.visitAccess(access)
                     }
 
                     override fun visitExpression(expression: FirExpression) {

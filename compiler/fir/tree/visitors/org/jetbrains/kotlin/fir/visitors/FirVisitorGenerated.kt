@@ -168,6 +168,26 @@ abstract class FirVisitor<out R, in D> {
         return visitStatement(expression, data)
     }
 
+    open fun visitAccess(access: FirAccess, data: D): R {
+        return visitExpression(access, data)
+    }
+
+    open fun visitCallableReferenceAccess(callableReferenceAccess: FirCallableReferenceAccess, data: D): R {
+        return visitAccess(callableReferenceAccess, data)
+    }
+
+    open fun visitModifiableAccess(modifiableAccess: FirModifiableAccess, data: D): R {
+        return visitAccess(modifiableAccess, data)
+    }
+
+    open fun visitSet(set: FirSet, data: D): R {
+        return visitAccess(set, data)
+    }
+
+    open fun visitPropertySet(propertySet: FirPropertySet, data: D): R {
+        return visitSet(propertySet, data)
+    }
+
     open fun visitBlock(block: FirBlock, data: D): R {
         return visitExpression(block, data)
     }
@@ -238,30 +258,6 @@ abstract class FirVisitor<out R, in D> {
 
     open fun visitReturnStatement(returnStatement: FirReturnStatement, data: D): R {
         return visitJump(returnStatement, data)
-    }
-
-    open fun visitMemberAccess(memberAccess: FirMemberAccess, data: D): R {
-        return visitExpression(memberAccess, data)
-    }
-
-    open fun visitCallableReferenceAccess(callableReferenceAccess: FirCallableReferenceAccess, data: D): R {
-        return visitMemberAccess(callableReferenceAccess, data)
-    }
-
-    open fun visitModifiableMemberAccess(modifiableMemberAccess: FirModifiableMemberAccess, data: D): R {
-        return visitMemberAccess(modifiableMemberAccess, data)
-    }
-
-    open fun visitPropertyGet(propertyGet: FirPropertyGet, data: D): R {
-        return visitMemberAccess(propertyGet, data)
-    }
-
-    open fun visitSet(set: FirSet, data: D): R {
-        return visitMemberAccess(set, data)
-    }
-
-    open fun visitPropertySet(propertySet: FirPropertySet, data: D): R {
-        return visitSet(propertySet, data)
     }
 
     open fun visitThrowExpression(throwExpression: FirThrowExpression, data: D): R {

@@ -168,6 +168,26 @@ abstract class FirVisitorVoid : FirVisitor<Unit, Nothing?>() {
         visitStatement(expression, null)
     }
 
+    open fun visitAccess(access: FirAccess) {
+        visitExpression(access, null)
+    }
+
+    open fun visitCallableReferenceAccess(callableReferenceAccess: FirCallableReferenceAccess) {
+        visitAccess(callableReferenceAccess, null)
+    }
+
+    open fun visitModifiableAccess(modifiableAccess: FirModifiableAccess) {
+        visitAccess(modifiableAccess, null)
+    }
+
+    open fun visitSet(set: FirSet) {
+        visitAccess(set, null)
+    }
+
+    open fun visitPropertySet(propertySet: FirPropertySet) {
+        visitSet(propertySet, null)
+    }
+
     open fun visitBlock(block: FirBlock) {
         visitExpression(block, null)
     }
@@ -238,30 +258,6 @@ abstract class FirVisitorVoid : FirVisitor<Unit, Nothing?>() {
 
     open fun visitReturnStatement(returnStatement: FirReturnStatement) {
         visitJump(returnStatement, null)
-    }
-
-    open fun visitMemberAccess(memberAccess: FirMemberAccess) {
-        visitExpression(memberAccess, null)
-    }
-
-    open fun visitCallableReferenceAccess(callableReferenceAccess: FirCallableReferenceAccess) {
-        visitMemberAccess(callableReferenceAccess, null)
-    }
-
-    open fun visitModifiableMemberAccess(modifiableMemberAccess: FirModifiableMemberAccess) {
-        visitMemberAccess(modifiableMemberAccess, null)
-    }
-
-    open fun visitPropertyGet(propertyGet: FirPropertyGet) {
-        visitMemberAccess(propertyGet, null)
-    }
-
-    open fun visitSet(set: FirSet) {
-        visitMemberAccess(set, null)
-    }
-
-    open fun visitPropertySet(propertySet: FirPropertySet) {
-        visitSet(propertySet, null)
     }
 
     open fun visitThrowExpression(throwExpression: FirThrowExpression) {
@@ -350,6 +346,10 @@ abstract class FirVisitorVoid : FirVisitor<Unit, Nothing?>() {
 
     open fun visitWhenBranch(whenBranch: FirWhenBranch) {
         visitElement(whenBranch, null)
+    }
+
+    final override fun visitAccess(access: FirAccess, data: Nothing?) {
+        visitAccess(access)
     }
 
     final override fun visitAnnotationCall(annotationCall: FirAnnotationCall, data: Nothing?) {
@@ -516,12 +516,12 @@ abstract class FirVisitorVoid : FirVisitor<Unit, Nothing?>() {
         visitLoop(loop)
     }
 
-    final override fun visitMemberAccess(memberAccess: FirMemberAccess, data: Nothing?) {
-        visitMemberAccess(memberAccess)
-    }
-
     final override fun visitMemberDeclaration(memberDeclaration: FirMemberDeclaration, data: Nothing?) {
         visitMemberDeclaration(memberDeclaration)
+    }
+
+    final override fun visitModifiableAccess(modifiableAccess: FirModifiableAccess, data: Nothing?) {
+        visitModifiableAccess(modifiableAccess)
     }
 
     final override fun visitModifiableClass(modifiableClass: FirModifiableClass, data: Nothing?) {
@@ -530,10 +530,6 @@ abstract class FirVisitorVoid : FirVisitor<Unit, Nothing?>() {
 
     final override fun visitModifiableFunction(modifiableFunction: FirModifiableFunction, data: Nothing?) {
         visitModifiableFunction(modifiableFunction)
-    }
-
-    final override fun visitModifiableMemberAccess(modifiableMemberAccess: FirModifiableMemberAccess, data: Nothing?) {
-        visitModifiableMemberAccess(modifiableMemberAccess)
     }
 
     final override fun visitNamedDeclaration(namedDeclaration: FirNamedDeclaration, data: Nothing?) {
@@ -562,10 +558,6 @@ abstract class FirVisitorVoid : FirVisitor<Unit, Nothing?>() {
 
     final override fun visitPropertyAccessor(propertyAccessor: FirPropertyAccessor, data: Nothing?) {
         visitPropertyAccessor(propertyAccessor)
-    }
-
-    final override fun visitPropertyGet(propertyGet: FirPropertyGet, data: Nothing?) {
-        visitPropertyGet(propertyGet)
     }
 
     final override fun visitPropertySet(propertySet: FirPropertySet, data: Nothing?) {
