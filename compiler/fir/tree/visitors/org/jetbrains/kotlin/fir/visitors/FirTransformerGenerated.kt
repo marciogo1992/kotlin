@@ -172,20 +172,20 @@ abstract class FirTransformer<in D> : FirVisitor<CompositeTransformResult<FirEle
         return transformExpression(access, data)
     }
 
+    open fun transformAssignment(assignment: FirAssignment, data: D): CompositeTransformResult<FirStatement> {
+        return transformAccess(assignment, data)
+    }
+
+    open fun transformPropertyAssignment(propertyAssignment: FirPropertyAssignment, data: D): CompositeTransformResult<FirStatement> {
+        return transformAssignment(propertyAssignment, data)
+    }
+
     open fun transformCallableReferenceAccess(callableReferenceAccess: FirCallableReferenceAccess, data: D): CompositeTransformResult<FirStatement> {
         return transformAccess(callableReferenceAccess, data)
     }
 
     open fun transformModifiableAccess(modifiableAccess: FirModifiableAccess, data: D): CompositeTransformResult<FirStatement> {
         return transformAccess(modifiableAccess, data)
-    }
-
-    open fun transformSet(set: FirSet, data: D): CompositeTransformResult<FirStatement> {
-        return transformAccess(set, data)
-    }
-
-    open fun transformPropertySet(propertySet: FirPropertySet, data: D): CompositeTransformResult<FirStatement> {
-        return transformSet(propertySet, data)
     }
 
     open fun transformBlock(block: FirBlock, data: D): CompositeTransformResult<FirStatement> {
@@ -380,6 +380,10 @@ abstract class FirTransformer<in D> : FirVisitor<CompositeTransformResult<FirEle
         return transformArraySetCall(arraySetCall, data)
     }
 
+    final override fun visitAssignment(assignment: FirAssignment, data: D): CompositeTransformResult<FirElement> {
+        return transformAssignment(assignment, data)
+    }
+
     final override fun visitBlock(block: FirBlock, data: D): CompositeTransformResult<FirElement> {
         return transformBlock(block, data)
     }
@@ -560,8 +564,8 @@ abstract class FirTransformer<in D> : FirVisitor<CompositeTransformResult<FirEle
         return transformPropertyAccessor(propertyAccessor, data)
     }
 
-    final override fun visitPropertySet(propertySet: FirPropertySet, data: D): CompositeTransformResult<FirElement> {
-        return transformPropertySet(propertySet, data)
+    final override fun visitPropertyAssignment(propertyAssignment: FirPropertyAssignment, data: D): CompositeTransformResult<FirElement> {
+        return transformPropertyAssignment(propertyAssignment, data)
     }
 
     final override fun visitReference(reference: FirReference, data: D): CompositeTransformResult<FirElement> {
@@ -590,10 +594,6 @@ abstract class FirTransformer<in D> : FirVisitor<CompositeTransformResult<FirEle
 
     final override fun visitReturnStatement(returnStatement: FirReturnStatement, data: D): CompositeTransformResult<FirElement> {
         return transformReturnStatement(returnStatement, data)
-    }
-
-    final override fun visitSet(set: FirSet, data: D): CompositeTransformResult<FirElement> {
-        return transformSet(set, data)
     }
 
     final override fun visitStarProjection(starProjection: FirStarProjection, data: D): CompositeTransformResult<FirElement> {
