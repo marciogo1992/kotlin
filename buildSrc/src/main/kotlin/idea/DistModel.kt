@@ -1,6 +1,5 @@
 package org.jetbrains.kotlin.buildUtils.idea
 
-import com.google.gson.stream.JsonWriter
 import org.gradle.api.Action
 import org.gradle.api.file.FileCopyDetails
 import java.io.File
@@ -8,9 +7,9 @@ import java.io.PrintWriter
 
 
 class DistVFile(
-        val parent: DistVFile?,
-        val name: String,
-        val file: File = File(parent!!.file, name)
+    val parent: DistVFile?,
+    val name: String,
+    val file: File = File(parent!!.file, name)
 ) {
     val child = mutableMapOf<String, DistVFile>()
 
@@ -54,55 +53,26 @@ class DistVFile(
             it.printTree(p, "$depth  ")
         }
     }
-
-    fun toJson(writer: JsonWriter) {
-        writer.beginObject()
-        writer.name("@id").value(file.path)
-        writer.name("name").value(name)
-        writer.name("contents")
-        writer.beginArray()
-        for (item in contents) {
-            writer.beginObject()
-            item.toJson(writer)
-            writer.endObject()
-        }
-        writer.endArray()
-        writer.name("children")
-        writer.beginArray()
-        child.values.forEach {
-            it.toJson(writer)
-        }
-        writer.endArray()
-        writer.endObject()
-    }
 }
 
-sealed class DistContentElement(val targetDir: DistVFile) {
-    abstract fun toJson(writer: JsonWriter)
-}
+sealed class DistContentElement()
 
 class DistCopy(
-        target: DistVFile,
-        val src: DistVFile,
-        val customTargetName: String? = null,
-        val copyActions: Collection<Action<in FileCopyDetails>> = listOf()
-) : DistContentElement(target) {
+    target: DistVFile,
+    val src: DistVFile,
+    val customTargetName: String? = null,
+    val copyActions: Collection<Action<in FileCopyDetails>> = listOf()
+) : DistContentElement() {
     init {
         target.addContents(this)
     }
 
     override fun toString(): String =
-            "COPY OF ${src.file}" +
-                    if (customTargetName != null) " -> $customTargetName" else ""
-
-    override fun toJson(writer: JsonWriter) {
-        writer.name("@type").value("copy")
-                .name("src").value(src.file.path)
-                .name("customTargetName").value(customTargetName)
-    }
+        "COPY OF ${src.file}" +
+                if (customTargetName != null) " -> $customTargetName" else ""
 }
 
-class DistModuleOutput(parent: DistVFile, val projectId: String) : DistContentElement(parent) {
+class DistModuleOutput(parent: DistVFile, val projectId: String) : DistContentElement() {
     init {
         parent.addContents(this)
     }
@@ -122,10 +92,5 @@ class DistModuleOutput(parent: DistVFile, val projectId: String) : DistContentEl
 
     override fun hashCode(): Int {
         return projectId.hashCode()
-    }
-
-    override fun toJson(writer: JsonWriter) {
-        writer.name("@type").value("compile")
-                .name("project").value(projectId)
     }
 }

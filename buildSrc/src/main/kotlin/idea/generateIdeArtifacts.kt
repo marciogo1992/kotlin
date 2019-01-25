@@ -11,17 +11,22 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.jetbrains.gradle.ext.TopLevelArtifact
+import org.slf4j.LoggerFactory
 import java.io.File
 
-fun path(vararg components: String) = components.joinToString(File.separator)
-
+/**
+ * Temporary solution for configuring IDEA artifacts based on Gradle copy tasks configurations.
+ * This should be replaced with DSL that produces both Gradle copy tasks and IDEA artifacts configuration.
+ *
+ * TODO: remove this package when DSL described above will be implemented
+ */
 fun generateIdeArtifacts(rootProject: Project, artifactsFactory: NamedDomainObjectContainer<TopLevelArtifact>) {
     val reportsDir = File(path(rootProject.buildDir.path, "reports", "idea-artifacts-cfg"))
     reportsDir.mkdirs()
     val projectDir = rootProject.projectDir
 
     File(reportsDir, "01-visitor.report.txt").printWriter().use { visitorReport ->
-        val modelBuilder = object: DistModelBuilder(rootProject, visitorReport) {
+        val modelBuilder = object : DistModelBuilder(rootProject, visitorReport) {
             // todo: investigate why allCopyActions not working
             override fun transformJarName(name: String): String {
                 val name1 = name.replace(Regex("-${java.util.regex.Pattern.quote(rootProject.version.toString())}"), "")
@@ -49,22 +54,21 @@ fun generateIdeArtifacts(rootProject: Project, artifactsFactory: NamedDomainObje
                     when {
                         it is AbstractCopyTask -> modelBuilder.visitCopyTask(it)
                         it is AbstractCompile -> modelBuilder.visitCompileTask(it)
-                        it is IntelliJInstrumentCodeTask -> modelBuilder.visitInterumentTask(it)
+                        it is IntelliJInstrumentCodeTask -> modelBuilder.visitInstrumentTask(it)
                         it.name == "stripMetadata" -> {
                             modelBuilder.rootCtx.log(
-                                    "STRIP METADATA",
-                                    "${it.inputs.files.singleFile} -> ${it.outputs.files.singleFile}"
+                                "STRIP METADATA",
+                                "${it.inputs.files.singleFile} -> ${it.outputs.files.singleFile}"
                             )
 
                             DistCopy(
-                                    modelBuilder.requirePath(it.outputs.files.singleFile.path),
-                                    modelBuilder.requirePath(it.inputs.files.singleFile.path)
+                                modelBuilder.requirePath(it.outputs.files.singleFile.path),
+                                modelBuilder.requirePath(it.inputs.files.singleFile.path)
                             )
                         }
                     }
                 } catch (t: Throwable) {
-                    println("Error while visiting `$it`")
-                    t.printStackTrace()
+                    logger.error("Error while visiting `$it`", t)
                 }
             }
 
@@ -77,7 +81,16 @@ fun generateIdeArtifacts(rootProject: Project, artifactsFactory: NamedDomainObje
 
         // proguard
         DistCopy(
-            target = modelBuilder.requirePath(path(projectDir.path, "libraries", "reflect", "build", "libs", "kotlin-reflect-proguard.jar")),
+            target = modelBuilder.requirePath(
+                path(
+                    projectDir.path,
+                    "libraries",
+                    "reflect",
+                    "build",
+                    "libs",
+                    "kotlin-reflect-proguard.jar"
+                )
+            ),
             src = modelBuilder.requirePath(path(projectDir.path, "libraries", "reflect", "build", "libs", "kotlin-reflect-shadow.jar"))
         )
 
@@ -110,3 +123,8 @@ fun generateIdeArtifacts(rootProject: Project, artifactsFactory: NamedDomainObje
         }
     }
 }
+
+private fun path(vararg components: String) = components.joinToString(File.separator)
+
+internal val logger = LoggerFactory.getLogger("ide-artifacts")
+

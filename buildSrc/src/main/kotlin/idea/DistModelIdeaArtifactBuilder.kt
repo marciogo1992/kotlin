@@ -34,7 +34,7 @@ class DistModelIdeaArtifactBuilder(val rootProject: Project) {
                     val name = it.ideaModuleName
 
                     if (name.result != null) moduleOutput(name.result + "_main")
-                    else println("Cannot find idea module name for project `${it.projectId}`: ${name.error}")
+                    else logger.warn("Cannot find idea module name for project `${it.projectId}`: ${name.error}")
                 }
             }
         }

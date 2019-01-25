@@ -42,7 +42,7 @@ open class DistModelBuilder(val rootProject: Project, pw: PrintWriter) {
     val vfsRoot = DistVFile(null, "<root>", File(""))
     val refs = mutableSetOf<DistVFile>()
 
-    fun visitInterumentTask(it: IntelliJInstrumentCodeTask): DistModelBuildContext = visited.getOrPut(it) {
+    fun visitInstrumentTask(it: IntelliJInstrumentCodeTask): DistModelBuildContext = visited.getOrPut(it) {
         val ctx = rootCtx.child("INSTRUMENT", it.path)
         ctx.setDest(it.output!!.path)
         processSourcePath(it.originalClassesDirs, ctx)
@@ -65,8 +65,8 @@ open class DistModelBuilder(val rootProject: Project, pw: PrintWriter) {
     }
 
     fun visitCopyTask(
-            copy: AbstractCopyTask,
-            shade: Boolean = false
+        copy: AbstractCopyTask,
+        shade: Boolean = false
     ): DistModelBuildContext = visited.getOrPut(copy) {
         val context = rootCtx.child("COPY", copy.path, shade)
 
@@ -122,38 +122,38 @@ open class DistModelBuilder(val rootProject: Project, pw: PrintWriter) {
         }
     }
 
-    fun processSourcePath(it: Any?, ctx: DistModelBuildContext) {
+    fun processSourcePath(sourcePath: Any?, ctx: DistModelBuildContext) {
         when {
-            it == null -> Unit
-            it is Jar -> ctx.child("JAR") { child ->
-                child.addCopyOf(it.archivePath.path)
+            sourcePath == null -> Unit
+            sourcePath is Jar -> ctx.child("JAR") { child ->
+                child.addCopyOf(sourcePath.archivePath.path)
             }
-            it is SourceSetOutput -> ctx.child("COMPILE") { child ->
-                it.classesDirs.files.forEach {
+            sourcePath is SourceSetOutput -> ctx.child("COMPILE") { child ->
+                sourcePath.classesDirs.files.forEach {
                     child.addCopyOf(it.path)
                 }
             }
-            it is Configuration -> {
+            sourcePath is Configuration -> {
                 ctx.child("CONFIGURATION") { child ->
-                    it.resolve().forEach {
+                    sourcePath.resolve().forEach {
                         child.addCopyOf(it.path)
                     }
                 }
             }
-            it is SourceDirectorySet -> {
+            sourcePath is SourceDirectorySet -> {
                 ctx.child("SOURCES") { child ->
-                    it.srcDirs.forEach {
+                    sourcePath.srcDirs.forEach {
                         child.addCopyOf(it.path)
                     }
                 }
             }
-            it is MinimalFileSet -> ctx.child("MINIMAL FILE SET (${it.javaClass.simpleName})") { child ->
-                it.files.forEach {
+            sourcePath is MinimalFileSet -> ctx.child("MINIMAL FILE SET (${sourcePath.javaClass.simpleName})") { child ->
+                sourcePath.files.forEach {
                     processSourcePath(it, child)
                 }
             }
-            it is MinimalFileTree -> ctx.child("MINIMAL FILE TREE (${it.javaClass.simpleName})") { child ->
-                it.visit(object : FileVisitor {
+            sourcePath is MinimalFileTree -> ctx.child("MINIMAL FILE TREE (${sourcePath.javaClass.simpleName})") { child ->
+                sourcePath.visit(object : FileVisitor {
                     override fun visitDir(dirDetails: FileVisitDetails) {
                         processSourcePath(dirDetails.file, child)
                     }
@@ -163,8 +163,8 @@ open class DistModelBuilder(val rootProject: Project, pw: PrintWriter) {
                     }
                 })
             }
-            it is FileTreeAdapter && it.tree is MapFileTree -> ctx.child("FILE TREE ADAPTER OF MAP FILE TREE (${it.javaClass.simpleName})") { child ->
-                it.visitContents(object : FileCollectionResolveContext {
+            sourcePath is FileTreeAdapter && sourcePath.tree is MapFileTree -> ctx.child("FILE TREE ADAPTER OF MAP FILE TREE (${sourcePath.javaClass.simpleName})") { child ->
+                sourcePath.visitContents(object : FileCollectionResolveContext {
                     override fun add(element: Any): FileCollectionResolveContext {
                         processSourcePath(element, child)
                         return this
@@ -179,8 +179,8 @@ open class DistModelBuilder(val rootProject: Project, pw: PrintWriter) {
                     }
                 })
             }
-            it is CompositeFileCollection -> ctx.child("COMPOSITE FILE COLLECTION") { child ->
-                it.visitRootElements(object : FileCollectionVisitor {
+            sourcePath is CompositeFileCollection -> ctx.child("COMPOSITE FILE COLLECTION") { child ->
+                sourcePath.visitRootElements(object : FileCollectionVisitor {
                     override fun visitDirectoryTree(directoryTree: DirectoryFileTree) {
                         child.child("DIR TREE") {
                             it.addCopyOf(directoryTree.dir.path)
@@ -198,17 +198,17 @@ open class DistModelBuilder(val rootProject: Project, pw: PrintWriter) {
                     }
                 })
             }
-            it is FileTreeAdapter && it.tree is ZipFileTree -> ctx.child("ZIP FILE TREE ADAPTER") { child ->
-                val tree = it.tree
+            sourcePath is FileTreeAdapter && sourcePath.tree is ZipFileTree -> ctx.child("ZIP FILE TREE ADAPTER") { child ->
+                val tree = sourcePath.tree
                 val field = tree.javaClass.declaredFields.find { it.name == "zipFile" }!!
                 field.isAccessible = true
                 val zipFile = field.get(tree) as File
 
                 child.addCopyOf(zipFile.path)
             }
-            it is FileTreeInternal -> ctx.child("FILE TREE INTERNAL") { child ->
+            sourcePath is FileTreeInternal -> ctx.child("FILE TREE INTERNAL") { child ->
                 // todo: preserve or warn about filtering
-                it.visitTreeOrBackingFile(object : FileVisitor {
+                sourcePath.visitTreeOrBackingFile(object : FileVisitor {
                     override fun visitFile(fileDetails: FileVisitDetails) {
                         child.addCopyOf(fileDetails.file.path)
                     }
@@ -218,41 +218,41 @@ open class DistModelBuilder(val rootProject: Project, pw: PrintWriter) {
                     }
                 })
             }
-            it is FileCollection -> ctx.child("OTHER FILE COLLECTION (${it.javaClass})") { child ->
+            sourcePath is FileCollection -> ctx.child("OTHER FILE COLLECTION (${sourcePath.javaClass})") { child ->
                 try {
-                    it.files.forEach {
+                    sourcePath.files.forEach {
                         child.addCopyOf(it.path)
                     }
                 } catch (t: Throwable) {
-                    child.logUnsupported("FILE COLLECTION (${t.message})", it)
+                    child.logUnsupported("FILE COLLECTION (${t.message})", sourcePath)
                 }
             }
-            it is String || it is GStringImpl -> ctx.child("STRING") { child ->
-                child.addCopyOf(it.toString())
+            sourcePath is String || sourcePath is GStringImpl -> ctx.child("STRING") { child ->
+                child.addCopyOf(sourcePath.toString())
             }
-            it is Callable<*> -> ctx.child("CALLABLE") { child ->
-                processSourcePath(it.call(), child)
+            sourcePath is Callable<*> -> ctx.child("CALLABLE") { child ->
+                processSourcePath(sourcePath.call(), child)
             }
-            it is Collection<*> -> ctx.child("COLLECTION") { child ->
-                it.forEach {
+            sourcePath is Collection<*> -> ctx.child("COLLECTION") { child ->
+                sourcePath.forEach {
                     processSourcePath(it, child)
                 }
             }
-            it is Copy -> ctx.child("COPY OUTPUT") { child ->
-                val src = visitCopyTask(it).destination
+            sourcePath is Copy -> ctx.child("COPY OUTPUT") { child ->
+                val src = visitCopyTask(sourcePath).destination
                 if (src != null) child.addCopyOf(src)
                 // else it is added to `it`, because destination is inhereted by context
             }
-            it is File -> ctx.child("FILE ${it.path}") { child ->
-                child.addCopyOf(it.path)
+            sourcePath is File -> ctx.child("FILE ${sourcePath.path}") { child ->
+                child.addCopyOf(sourcePath.path)
             }
-            else -> ctx.logUnsupported("SOURCE PATH", it)
+            else -> ctx.logUnsupported("SOURCE PATH", sourcePath)
         }
     }
 
     inline fun DistModelBuildContext.addCopyOf(
-            src: String,
-            body: (src: DistVFile, target: DistVFile) -> Unit = { _, _ -> Unit }
+        src: String,
+        body: (src: DistVFile, target: DistVFile) -> Unit = { _, _ -> Unit }
     ) {
         addCopyOf(requirePath(src), body)
     }
@@ -275,8 +275,8 @@ open class DistModelBuilder(val rootProject: Project, pw: PrintWriter) {
     open fun transformJarName(name: String): String = name
 
     inline fun DistModelBuildContext.addCopyOf(
-            src: DistVFile,
-            body: (src: DistVFile, target: DistVFile) -> Unit = { _, _ -> Unit }
+        src: DistVFile,
+        body: (src: DistVFile, target: DistVFile) -> Unit = { _, _ -> Unit }
     ) {
 
         val destination = destination
@@ -296,9 +296,9 @@ open class DistModelBuilder(val rootProject: Project, pw: PrintWriter) {
     fun checkRefs() {
         refs.forEach {
             if (!it.hasContents && it.contents.isEmpty() && it.file.path.contains("${File.pathSeparator}build${File.pathSeparator}")) {
-                println("UNRESOLVED ${it.file}")
+                logger.error("UNRESOLVED ${it.file}")
                 it.contents.forEach {
-                    println("+ ${it}")
+                    logger.error("+ ${it}")
                 }
             }
         }

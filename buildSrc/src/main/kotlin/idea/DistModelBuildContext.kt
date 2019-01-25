@@ -3,6 +3,7 @@ package idea
 import org.gradle.api.Action
 import org.gradle.api.file.FileCopyDetails
 import org.jetbrains.kotlin.buildUtils.idea.DistVFile
+import org.jetbrains.kotlin.buildUtils.idea.logger
 
 /**
  * Used for logging and nesting properties
@@ -31,10 +32,10 @@ class DistModelBuildContext(
         if (logEnabled) {
             report?.appendln("$logPrefix- $kind $title")
             if (print) {
-                println("$kind $title, while visiting:")
+                logger.error("$kind $title, while visiting:")
                 var p = this
                 while (p.parent != null) {
-                    println(" - ${p.kind} ${p.title}")
+                    logger.error(" - ${p.kind} ${p.title}")
                     p = p.parent!!
                 }
             }
