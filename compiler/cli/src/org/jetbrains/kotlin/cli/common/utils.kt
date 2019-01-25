@@ -47,13 +47,13 @@ fun checkKotlinPackageUsage(environment: KotlinCoreEnvironment, files: Collectio
 
 fun getLibraryFromHome(
     paths: KotlinPaths?,
-    getLibrary: Function1<KotlinPaths, File>,
+    getLibrary: (KotlinPaths) -> File,
     libraryName: String,
     messageCollector: MessageCollector,
     noLibraryArgument: String
 ): File? {
     if (paths != null) {
-        val stdlibJar = getLibrary.invoke(paths)
+        val stdlibJar = getLibrary(paths)
         if (stdlibJar.exists()) {
             return stdlibJar
         }

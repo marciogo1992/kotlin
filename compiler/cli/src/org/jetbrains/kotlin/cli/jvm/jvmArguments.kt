@@ -22,9 +22,9 @@ fun CompilerConfiguration.setupJvmSpecificArguments(arguments: K2JVMCompilerArgu
 
     val messageCollector = getNotNull(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY)
 
-    putIfTrue(JVMConfigurationKeys.INCLUDE_RUNTIME, arguments.includeRuntime)
+    put(JVMConfigurationKeys.INCLUDE_RUNTIME, arguments.includeRuntime)
 
-    putIfNotNull(JVMConfigurationKeys.FRIEND_PATHS, arguments.friendPaths)
+    putIfNotNull(JVMConfigurationKeys.FRIEND_PATHS, arguments.friendPaths?.asList())
 
     if (arguments.jvmTarget != null) {
         val jvmTarget = JvmTarget.fromString(arguments.jvmTarget!!)
@@ -38,7 +38,7 @@ fun CompilerConfiguration.setupJvmSpecificArguments(arguments: K2JVMCompilerArgu
         }
     }
 
-    addAllIfNotNull(JVMConfigurationKeys.ADDITIONAL_JAVA_MODULES, arguments.additionalJavaModules)
+    addAllIfNotNull(JVMConfigurationKeys.ADDITIONAL_JAVA_MODULES, arguments.additionalJavaModules?.asList())
 }
 
 fun CompilerConfiguration.configureJdkHome(arguments: K2JVMCompilerArguments): Boolean {
@@ -114,7 +114,8 @@ fun CompilerConfiguration.isModularJava(): Boolean {
 
 fun CompilerConfiguration.addModularRootIfNotNull(isModularJava: Boolean, moduleName: String, file: File?) {
     when {
-        file == null -> {}
+        file == null -> {
+        }
         isModularJava -> {
             add(CLIConfigurationKeys.CONTENT_ROOTS, JvmModulePathRoot(file))
             add(JVMConfigurationKeys.ADDITIONAL_JAVA_MODULES, moduleName)

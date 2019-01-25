@@ -21,9 +21,9 @@ fun <A : CommonCompilerArguments> CompilerConfiguration.setupCommonArguments(
     arguments: A,
     createMetadataVersion: ((IntArray) -> BinaryVersion)? = null
 ) {
-    putIfTrue(CommonConfigurationKeys.DISABLE_INLINE, arguments.noInline)
+    put(CommonConfigurationKeys.DISABLE_INLINE, arguments.noInline)
     putIfNotNull(CLIConfigurationKeys.INTELLIJ_PLUGIN_ROOT, arguments.intellijPluginRoot)
-    putIfTrue(CommonConfigurationKeys.REPORT_OUTPUT_FILES, arguments.reportOutputFiles)
+    put(CommonConfigurationKeys.REPORT_OUTPUT_FILES, arguments.reportOutputFiles)
 
     val metadataVersionString = arguments.metadataVersion
     if (metadataVersionString != null) {
@@ -33,7 +33,7 @@ fun <A : CommonCompilerArguments> CompilerConfiguration.setupCommonArguments(
             versionArray == null -> messageCollector.report(
                 CompilerMessageSeverity.ERROR, "Invalid metadata version: $metadataVersionString", null
             )
-            createMetadataVersion == null -> throw Exception("Unable to create metadata version: missing argument")
+            createMetadataVersion == null -> throw IllegalStateException("Unable to create metadata version: missing argument")
             else -> put(CommonConfigurationKeys.METADATA_VERSION, createMetadataVersion(versionArray))
         }
     }
@@ -41,11 +41,16 @@ fun <A : CommonCompilerArguments> CompilerConfiguration.setupCommonArguments(
     setupLanguageVersionSettings(arguments)
 
     put(CommonConfigurationKeys.LIST_PHASES, arguments.listPhases)
-    putIfNotNull(CommonConfigurationKeys.DISABLED_PHASES, arguments.disablePhases)
-    putIfNotNull(CommonConfigurationKeys.VERBOSE_PHASES, arguments.verbosePhases)
-    putIfNotNull(CommonConfigurationKeys.PHASES_TO_DUMP_STATE_BEFORE, arguments.phasesToDumpBefore)
-    putIfNotNull(CommonConfigurationKeys.PHASES_TO_DUMP_STATE_AFTER, arguments.phasesToDumpAfter)
-    putIfNotNull(CommonConfigurationKeys.PHASES_TO_DUMP_STATE, arguments.phasesToDump)
+
+    listOf(
+        CommonConfigurationKeys.DISABLED_PHASES to arguments.disablePhases,
+        CommonConfigurationKeys.VERBOSE_PHASES to arguments.verbosePhases,
+        CommonConfigurationKeys.PHASES_TO_DUMP_STATE_BEFORE to arguments.phasesToDumpBefore,
+        CommonConfigurationKeys.PHASES_TO_DUMP_STATE_AFTER to arguments.phasesToDumpAfter,
+        CommonConfigurationKeys.PHASES_TO_DUMP_STATE to arguments.phasesToDump
+    ).forEach { (k, v) ->
+        if (v != null) put(k, setOf(*v))
+    }
 
     put(CommonConfigurationKeys.PROFILE_PHASES, arguments.profilePhases)
 }

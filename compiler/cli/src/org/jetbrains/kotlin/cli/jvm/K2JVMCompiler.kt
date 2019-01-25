@@ -65,7 +65,7 @@ class K2JVMCompiler : CLICompiler<K2JVMCompilerArguments>() {
 
         if (!configuration.configureJdkHome(arguments)) return COMPILATION_ERROR
 
-        configuration.putIfTrue(JVMConfigurationKeys.DISABLE_STANDARD_SCRIPT_DEFINITION, arguments.disableStandardScript)
+        configuration.put(JVMConfigurationKeys.DISABLE_STANDARD_SCRIPT_DEFINITION, arguments.disableStandardScript)
 
         val pluginLoadResult = loadPlugins(arguments, configuration)
         if (pluginLoadResult != ExitCode.OK) return pluginLoadResult

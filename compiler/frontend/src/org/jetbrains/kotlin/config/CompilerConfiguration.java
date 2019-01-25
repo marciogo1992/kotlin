@@ -73,6 +73,12 @@ public class CompilerConfiguration {
         map.put(key.ideaKey, value);
     }
 
+    public <T> void putIfNotNull(@NotNull CompilerConfigurationKey<T> key, @Nullable T value) {
+        if (value != null) {
+            put(key, value);
+        }
+    }
+
     public <T> void add(@NotNull CompilerConfigurationKey<List<T>> key, @NotNull T value) {
         checkReadOnly();
         Key<List<T>> ideaKey = key.ideaKey;
@@ -101,6 +107,13 @@ public class CompilerConfiguration {
         List<T> list = (List<T>) map.get(ideaKey);
         list.addAll(index, values);
     }
+
+    public <T> void addAllIfNotNull(@NotNull CompilerConfigurationKey<List<T>> key, @Nullable Collection<T> values) {
+        if (values != null) {
+            addAll(key, values);
+        }
+    }
+
 
     public CompilerConfiguration copy() {
         CompilerConfiguration copy = new CompilerConfiguration();
