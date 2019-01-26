@@ -95,8 +95,10 @@ public class CompilerConfiguration {
         data.put(key, value);
     }
 
-    public <T> void addAll(@NotNull CompilerConfigurationKey<List<T>> key, @NotNull Collection<T> values) {
-        addAll(key, getList(key).size(), values);
+    public <T> void addAll(@NotNull CompilerConfigurationKey<List<T>> key, @Nullable Collection<T> values) {
+        if (values != null) {
+            addAll(key, getList(key).size(), values);
+        }
     }
 
     public <T> void addAll(@NotNull CompilerConfigurationKey<List<T>> key, int index, @NotNull Collection<T> values) {
@@ -107,13 +109,6 @@ public class CompilerConfiguration {
         List<T> list = (List<T>) map.get(ideaKey);
         list.addAll(index, values);
     }
-
-    public <T> void addAllIfNotNull(@NotNull CompilerConfigurationKey<List<T>> key, @Nullable Collection<T> values) {
-        if (values != null) {
-            addAll(key, values);
-        }
-    }
-
 
     public CompilerConfiguration copy() {
         CompilerConfiguration copy = new CompilerConfiguration();
